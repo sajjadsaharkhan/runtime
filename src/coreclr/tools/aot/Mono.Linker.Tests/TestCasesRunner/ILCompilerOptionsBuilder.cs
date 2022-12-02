@@ -119,6 +119,11 @@ namespace Mono.Linker.Tests.TestCasesRunner
 
 		public virtual void AddAssemblyAction (string action, string assembly)
 		{
+			switch (action) {
+			case "copy":
+				Options.AdditionalRootAssemblies.Add (assembly);
+				break;
+			}
 		}
 
 		public virtual void AddSkipUnresolved (bool skipUnresolved)
@@ -221,7 +226,7 @@ namespace Mono.Linker.Tests.TestCasesRunner
 				AddAdditionalArgument (additionalArgument.Key, additionalArgument.Value);
 		}
 
-		static void AppendExpandedPaths (Dictionary<string, string> dictionary, string pattern)
+		private static void AppendExpandedPaths (Dictionary<string, string> dictionary, string pattern)
 		{
 			bool empty = true;
 

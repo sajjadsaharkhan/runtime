@@ -8,7 +8,7 @@ namespace ILCompiler.DependencyAnalysis
 {
     /// Part of Node factory that deals with nodes describing results of generic lookups.
     /// See: <see cref="GenericLookupResult"/>.
-    partial class NodeFactory
+    public partial class NodeFactory
     {
         /// <summary>
         /// Helper class that provides a level of grouping for all the generic lookup result kinds.
@@ -134,7 +134,7 @@ namespace ILCompiler.DependencyAnalysis
 
             public GenericLookupResult UnwrapNullableType(TypeDesc type)
             {
-                // An actual unwrap nullable lookup is only required if the type is exactly a runtime 
+                // An actual unwrap nullable lookup is only required if the type is exactly a runtime
                 // determined type associated with System.__UniversalCanon itself, or if it's
                 // a runtime determined instance of Nullable.
                 if (type.IsRuntimeDeterminedType && (
@@ -284,16 +284,6 @@ namespace ILCompiler.DependencyAnalysis
             public static GenericLookupResult Integer(int integer)
             {
                 return s_integers.GetOrAdd(integer);
-            }
-
-            private static NodeCache<int, GenericLookupResult> s_pointersToSlots = new NodeCache<int, GenericLookupResult>(slotIndex =>
-            {
-                return new PointerToSlotLookupResult(slotIndex);
-            });
-
-            public static GenericLookupResult PointerToSlot(int slotIndex)
-            {
-                return s_pointersToSlots.GetOrAdd(slotIndex);
             }
         }
 

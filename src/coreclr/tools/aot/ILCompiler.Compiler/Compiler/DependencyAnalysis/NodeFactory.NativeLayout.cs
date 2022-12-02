@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Internal.Text;
 using Internal.TypeSystem;
@@ -12,14 +11,14 @@ using ILCompiler.DependencyAnalysisFramework;
 namespace ILCompiler.DependencyAnalysis
 {
     /// Part of Node factory that deals with nodes describing native layout information
-    partial class NodeFactory
+    public partial class NodeFactory
     {
         /// <summary>
         /// Helper class that provides a level of grouping for all the native layout lookups
         /// </summary>
         public class NativeLayoutHelper
         {
-            NodeFactory _factory;
+            private NodeFactory _factory;
 
             public NativeLayoutHelper(NodeFactory factory)
             {
@@ -192,11 +191,6 @@ namespace ILCompiler.DependencyAnalysis
                 _integerSlots = new NodeCache<int, NativeLayoutIntegerDictionarySlotNode>(value =>
                 {
                     return new NativeLayoutIntegerDictionarySlotNode(value);
-                });
-
-                _otherSlotPointerSlots = new NodeCache<int, NativeLayoutPointerToOtherSlotDictionarySlotNode>(otherSlotIndex =>
-                {
-                    return new NativeLayoutPointerToOtherSlotDictionarySlotNode(otherSlotIndex);
                 });
 
                 _constrainedMethodUseSlots = new NodeCache<ConstrainedMethodUseKey, NativeLayoutConstrainedMethodDictionarySlotNode>(constrainedMethodUse =>
@@ -372,7 +366,7 @@ namespace ILCompiler.DependencyAnalysis
                 return _placedVertexSequence.GetOrAdd(new VertexSequenceKey(vertices));
             }
 
-            class UIntSequenceComparer : IEqualityComparer<List<uint>>
+            private sealed class UIntSequenceComparer : IEqualityComparer<List<uint>>
             {
                 bool IEqualityComparer<List<uint>>.Equals(List<uint> x, List<uint> y)
                 {
@@ -654,12 +648,6 @@ namespace ILCompiler.DependencyAnalysis
             public NativeLayoutIntegerDictionarySlotNode IntegerSlot(int value)
             {
                 return _integerSlots.GetOrAdd(value);
-            }
-
-            private NodeCache<int, NativeLayoutPointerToOtherSlotDictionarySlotNode> _otherSlotPointerSlots;
-            public NativeLayoutPointerToOtherSlotDictionarySlotNode PointerToOtherSlot(int otherSlotIndex)
-            {
-                return _otherSlotPointerSlots.GetOrAdd(otherSlotIndex);
             }
 
             private NodeCache<ConstrainedMethodUseKey, NativeLayoutConstrainedMethodDictionarySlotNode> _constrainedMethodUseSlots;

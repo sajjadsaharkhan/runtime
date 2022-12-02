@@ -18,7 +18,7 @@ namespace Mono.Linker.Tests.TestCasesRunner
 	{
 		private const string DefaultSystemModule = "System.Private.CoreLib";
 
-		public void Trim (ILCompilerOptions options, ILogWriter logWriter)
+		public ILScanResults Trim (ILCompilerOptions options, ILogWriter logWriter)
 		{
 			ComputeDefaultOptions (out var targetOS, out var targetArchitecture);
 			var targetDetails = new TargetDetails (targetArchitecture, targetOS, TargetAbi.NativeAot);
@@ -32,6 +32,11 @@ namespace Mono.Linker.Tests.TestCasesRunner
 			List<EcmaModule> inputModules = new List<EcmaModule> ();
 			foreach (var inputFile in typeSystemContext.InputFilePaths) {
 				EcmaModule module = typeSystemContext.GetModuleFromPath (inputFile.Value);
+				inputModules.Add (module);
+			}
+
+			foreach (var trimAssembly in options.TrimAssemblies) {
+				EcmaModule module = typeSystemContext.GetModuleFromPath (trimAssembly);
 				inputModules.Add (module);
 			}
 
@@ -70,9 +75,11 @@ namespace Mono.Linker.Tests.TestCasesRunner
 				new NoDynamicInvokeThunkGenerationPolicy (),
 				new FlowAnnotations (logger, ilProvider, compilerGeneratedState),
 				UsageBasedMetadataGenerationOptions.ReflectionILScanning,
+				options: default,
 				logger,
 				Array.Empty<KeyValuePair<string, bool>> (),
 				Array.Empty<string> (),
+				options.AdditionalRootAssemblies.ToArray (),
 				options.TrimAssemblies.ToArray ());
 
 			CompilationBuilder builder = new RyuJitCompilationBuilder (typeSystemContext, compilationGroup)
@@ -85,7 +92,7 @@ namespace Mono.Linker.Tests.TestCasesRunner
 				.UseParallelism (System.Diagnostics.Debugger.IsAttached ? 1 : -1)
 				.ToILScanner ();
 
-			ILScanResults results = scanner.Scan ();
+			return scanner.Scan ();
 		}
 
 		public static void ComputeDefaultOptions (out TargetOS os, out TargetArchitecture arch)
@@ -119,7 +126,7 @@ namespace Mono.Linker.Tests.TestCasesRunner
 			}
 		}
 
-		private IReadOnlyCollection<MethodDesc> CreateInitializerList (CompilerTypeSystemContext context, ILCompilerOptions options)
+		private static IReadOnlyCollection<MethodDesc> CreateInitializerList (CompilerTypeSystemContext context, ILCompilerOptions options)
 		{
 			List<ModuleDesc> assembliesWithInitalizers = new List<ModuleDesc> ();
 
