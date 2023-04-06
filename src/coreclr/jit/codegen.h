@@ -75,15 +75,6 @@ private:
 
     void genMarkLabelsForCodegen();
 
-    inline RegState* regStateForType(var_types t)
-    {
-        return varTypeUsesFloatReg(t) ? &floatRegState : &intRegState;
-    }
-    inline RegState* regStateForReg(regNumber reg)
-    {
-        return genIsValidFloatReg(reg) ? &floatRegState : &intRegState;
-    }
-
     regNumber genFramePointerReg()
     {
         if (isFramePointerUsed())
@@ -883,8 +874,7 @@ protected:
     void genCkfinite(GenTree* treeNode);
     void genCodeForCompare(GenTreeOp* tree);
 #ifdef TARGET_ARM64
-    void genCodeForConditionalCompare(GenTreeOp* tree, GenCondition prevCond);
-    void genCodeForContainedCompareChain(GenTree* tree, bool* inchain, GenCondition* prevCond);
+    void genCodeForCCMP(GenTreeCCMP* ccmp);
 #endif
     void genCodeForSelect(GenTreeOp* select);
     void genIntrinsic(GenTreeIntrinsic* treeNode);
@@ -947,7 +937,7 @@ protected:
     void genSSE2Intrinsic(GenTreeHWIntrinsic* node);
     void genSSE41Intrinsic(GenTreeHWIntrinsic* node);
     void genSSE42Intrinsic(GenTreeHWIntrinsic* node);
-    void genAvxOrAvx2Intrinsic(GenTreeHWIntrinsic* node);
+    void genAvxFamilyIntrinsic(GenTreeHWIntrinsic* node);
     void genAESIntrinsic(GenTreeHWIntrinsic* node);
     void genBMI1OrBMI2Intrinsic(GenTreeHWIntrinsic* node);
     void genFMAIntrinsic(GenTreeHWIntrinsic* node);
@@ -1108,7 +1098,7 @@ protected:
 #endif // TARGET_XARCH
 
     void genCodeForCast(GenTreeOp* tree);
-    void genCodeForLclAddr(GenTreeLclVarCommon* lclAddrNode);
+    void genCodeForLclAddr(GenTreeLclFld* lclAddrNode);
     void genCodeForIndexAddr(GenTreeIndexAddr* tree);
     void genCodeForIndir(GenTreeIndir* tree);
     void genCodeForNegNot(GenTree* tree);
@@ -1130,6 +1120,7 @@ protected:
     void genCodeForPhysReg(GenTreePhysReg* tree);
     void genCodeForNullCheck(GenTreeIndir* tree);
     void genCodeForCmpXchg(GenTreeCmpXchg* tree);
+    void genCodeForReuseVal(GenTree* treeNode);
 
     void genAlignStackBeforeCall(GenTreePutArgStk* putArgStk);
     void genAlignStackBeforeCall(GenTreeCall* call);
@@ -1271,6 +1262,7 @@ protected:
 #endif // !TARGET_XARCH
 
     void genLclHeap(GenTree* tree);
+    void genCodeForMemmove(GenTreeBlk* tree);
 
     bool genIsRegCandidateLocal(GenTree* tree)
     {
@@ -1559,7 +1551,6 @@ public:
 #endif // TARGET_XARCH
 
 #if defined(TARGET_ARM64)
-    static insCflags InsCflagsForCcmp(GenCondition cond);
     static insCond JumpKindToInsCond(emitJumpKind condition);
 #elif defined(TARGET_XARCH)
     static instruction JumpKindToCmov(emitJumpKind condition);
@@ -1612,6 +1603,7 @@ public:
 
     void genCodeForJcc(GenTreeCC* tree);
     void genCodeForSetcc(GenTreeCC* setcc);
+    void genCodeForJTrue(GenTreeOp* jtrue);
 #endif // !TARGET_LOONGARCH64
 };
 

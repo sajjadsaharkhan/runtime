@@ -1502,18 +1502,15 @@ mono_allocate_stack_slots (MonoCompile *cfg, gboolean backward, guint32 *stack_s
 				 * Align the size too so the code generated for passing vtypes in
 				 * registers doesn't overwrite random locals.
 				 */
-				size = (size + (align - 1)) & ~(align -1);
+				size = ALIGN_TO (size, align);
 			}
 
 			if (backward) {
-				offset += size;
-				offset += align - 1;
-				offset &= ~(align - 1);
+				offset = ALIGN_TO (offset + size, align);
 				slot = offset;
 			}
 			else {
-				offset += align - 1;
-				offset &= ~(align - 1);
+				offset = ALIGN_TO (offset, align);
 				slot = offset;
 				offset += size;
 			}
@@ -3018,8 +3015,8 @@ init_backend (MonoBackend *backend)
 #ifdef MONO_ARCH_HAVE_OPTIMIZED_DIV
 	backend->optimized_div = 1;
 #endif
-#ifdef MONO_ARCH_FORCE_FLOAT32
-	backend->force_float32 = 1;
+#ifdef MONO_ARCH_HAVE_INIT_MRGCTX
+	backend->have_init_mrgctx = 1;
 #endif
 }
 
@@ -3136,13 +3133,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, JitFlags flags, int parts
 	try_llvm = mono_use_llvm || llvm;
 #endif
 
-#ifndef MONO_ARCH_FLOAT32_SUPPORTED
-	opts &= ~MONO_OPT_FLOAT32;
-#endif
-	if (current_backend->force_float32)
-		/* Force float32 mode on newer platforms */
-		opts |= MONO_OPT_FLOAT32;
-
  restart_compile:
 	if (method_is_gshared) {
 		method_to_compile = method;
@@ -3217,14 +3207,8 @@ mini_method_compile (MonoMethod *method, guint32 opts, JitFlags flags, int parts
 		cfg->explicit_null_checks = FALSE;
 	}
 
-	/*
-	if (!mono_debug_count ())
-		cfg->opt &= ~MONO_OPT_FLOAT32;
-	*/
 	if (!is_simd_supported (cfg))
 		cfg->opt &= ~MONO_OPT_SIMD;
-	cfg->r4fp = (cfg->opt & MONO_OPT_FLOAT32) ? 1 : 0;
-	cfg->r4_stack_type = cfg->r4fp ? STACK_R4 : STACK_R8;
 
 	if (cfg->gen_seq_points)
 		cfg->seq_points = g_ptr_array_new ();
